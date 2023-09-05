@@ -1,0 +1,56 @@
+Backup Production Database:
+
+Before making any changes, it's essential to create a backup of your production database. This ensures you can restore it if something goes wrong during the refresh process.
+Prepare the Test Environment:
+
+Make sure your test environment is ready to receive the refreshed data. This may involve setting up a clean test database or ensuring that the existing test database is empty.
+Export Data from Production:
+
+In Jira, you can export data from the production environment using built-in export tools or database backup tools. The specific method may vary depending on your Jira version and database type (e.g., PostgreSQL, MySQL, Oracle).
+Import Data into Test Environment:
+
+Once you have the data exported from the production instance, import it into the test environment. This typically involves importing data into the test database using database management tools or Jira's import utilities.
+Update Configuration:
+
+After importing the data, you may need to update various configuration settings in your test environment to match the production environment. This includes things like URL configurations, email settings, and any environment-specific configurations.
+Test the Refreshed Environment:
+
+Perform thorough testing to ensure that the test environment now mirrors the production environment as closely as possible. Test all critical functionalities, workflows, and integrations to ensure they work as expected.
+Notify Users and Stakeholders:
+
+If the test environment is used by other team members, notify them about the refresh and any potential downtime.
+Document the Process:
+
+Keep detailed documentation of the refresh process, including the steps you followed, any issues encountered, and how you resolved them. This documentation will be useful for future reference.
+Monitor for Issues:
+
+After the refresh, closely monitor the test environment for any unexpected issues, discrepancies, or errors that may have arisen as a result of the refresh.
+Plan for Regular Refreshes:
+
+Depending on your development and testing cycle, plan for regular database refreshes to keep the test environment up-to-date with production.
+Remember that performing a database refresh from production to test can be a complex process, and it's crucial to involve your IT and development teams in this process to ensure a smooth transition. Additionally, always exercise caution when working with production data to avoid any data loss or security breaches.
+
+steps for using this
+Export from Prod 
+1)pg_dump -U <username> -d <production_db_name> -f production_backup.sql
+
+import in test environment
+2)psql -U <username> -d <test_db_name> -f production_backup.sql
+
+now update in jdbc connection of jira 
+<jira-database-config>
+    <name>defaultDS</name>
+    <delegator-name>default</delegator-name>
+    <database-type>postgres72</database-type>
+    <schema-name>public</schema-name>
+    <jdbc-datasource>
+        <url>jdbc:postgresql://<test_db_host>:<test_db_port>/<test_db_name></url>
+        <driver-class>org.postgresql.Driver</driver-class>
+        <username><db_username></username>
+        <password><db_password></password>
+    </jdbc-datasource>
+</jira-database-config>
+
+
+
+
