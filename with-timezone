@@ -1,0 +1,45 @@
+import boto3
+from datetime import datetime, timedelta
+import pytz  # Import the pytz library
+
+# Define your AWS region
+region = 'ap-south-1'
+
+# Define the RDS instances
+source_db_instance = 'my-database-1'
+target_db_instance = 'my-database-3'
+
+# Create an RDS client
+rds_client = boto3.client('rds', region_name=region)
+
+# Specify the timezone you want to use (for example, 'UTC' or 'Asia/Kolkata')
+timezone = pytz.timezone('Asia/Kolkata')
+
+# Calculate the date 44 days ago in the specified timezone
+days_ago = datetime.now(timezone) - timedelta(days=44)
+
+# Describe automated snapshots for the source DB instance
+response = rds_client.describe_db_snapshots(
+    DBInstanceIdentifier=source_db_instance,
+    SnapshotType='automated'
+)
+
+# Check if there are any snapshots available
+snapshots = response.get('DBSnapshots', [])
+
+if not snapshots:
+    print(f"No automated snapshots found for {source_db_instance}. Cannot proceed with restoration.")
+else:
+    # Find the snapshot that is approximately 44 days old or closest to it
+    closest_snapshot = min(snapshots, key=lambda x: abs(x['SnapshotCreateTime'] - days_ago))
+
+    # Restore the closest suitable snapshot to the target instance
+    rds_client.restore_db_instance_from_db_snapshot(
+        DBInstanceIdentifier=target_db_instance,
+        DBSnapshotIdentifier=closest_snapshot['DBSnapshotIdentifier'],
+        AutoMinorVersionUpgrade=True,  # Adjust this based on your needs
+        MultiAZ=False  # Adjust this based on your needs
+    )
+
+    print(f"Database restoration from {closest_snapshot['DBSnapshotIdentifier']} backup of {source_db_instance} initiated.")
+
