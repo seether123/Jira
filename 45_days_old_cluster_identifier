@@ -2,10 +2,10 @@ import boto3
 from datetime import datetime, timedelta
 
 # AWS region
-aws_region = 'your-aws-region'
+aws_region = 'us-west-2'
 
 # Aurora cluster information
-source_cluster_identifier = 'your-source-cluster-name'  # Provide the name of the source Aurora cluster
+source_cluster_identifier = 'prod-aurora-postgresql-almjira-jira-upgrade-cluster'  # Provide the name of the source Aurora cluster
 new_cluster_identifier = 'your-new-cluster-name'  # Provide a name for the new Aurora cluster
 
 # Calculate the timestamp for 45 days ago
