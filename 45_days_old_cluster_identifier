@@ -1,0 +1,72 @@
+import boto3
+from datetime import datetime, timedelta
+
+# AWS region
+aws_region = 'your-aws-region'
+
+# Aurora cluster information
+source_cluster_identifier = 'your-source-cluster-name'  # Provide the name of the source Aurora cluster
+new_cluster_identifier = 'your-new-cluster-name'  # Provide a name for the new Aurora cluster
+
+# Calculate the timestamp for 45 days ago
+snapshot_age_days = 45
+snapshot_creation_time_threshold = datetime.now() - timedelta(days=snapshot_age_days)
+
+# Create an RDS client
+rds_client = boto3.client('rds', region_name=aws_region)
+
+# List available snapshots for the source Aurora cluster (including automated snapshots)
+response = rds_client.describe_db_cluster_snapshots(
+    DBClusterIdentifier=source_cluster_identifier
+)
+
+# Sort snapshots by snapshot creation time in descending order
+snapshots = sorted(response['DBClusterSnapshots'], key=lambda x: x['SnapshotCreateTime'], reverse=True)
+
+# Find the automated snapshot that is 45 days old or older
+selected_snapshot = None
+for snapshot in snapshots:
+    snapshot_creation_time = snapshot['SnapshotCreateTime']
+    if (
+        snapshot_creation_time <= snapshot_creation_time_threshold
+        and snapshot['SnapshotType'] == 'automated'
+    ):
+        selected_snapshot = snapshot
+        break
+
+# Check if a suitable snapshot was found
+if selected_snapshot:
+    snapshot_identifier = selected_snapshot['DBClusterSnapshotIdentifier']
+
+    # Create a new Aurora cluster from the selected automated snapshot
+    response = rds_client.restore_db_cluster_from_snapshot(
+        DBClusterIdentifier=new_cluster_identifier,
+        SnapshotIdentifier=snapshot_identifier,
+        Engine='aurora',
+        EngineVersion='5.6.10a',  # Specify the Aurora engine version
+        Port=3306,  # Specify the port for MySQL-compatible Aurora
+        DBSubnetGroupName='your-subnet-group-name',  # Provide a subnet group name
+        VpcSecurityGroupIds=['your-security-group-id'],  # Provide a security group ID
+        MasterUsername='your-master-username',
+        MasterUserPassword='your-master-password',
+        Tags=[
+            {
+                'Key': 'Name',
+                'Value': new_cluster_identifier
+            }
+        ],
+        EnableIAMDatabaseAuthentication=True,  # Optional: Enable IAM authentication if needed
+    )
+
+    # Wait for the cluster to be available (optional)
+    rds_client.get_waiter('db_cluster_available').wait(
+        DBClusterIdentifier=new_cluster_identifier
+    )
+
+    # Check the response for any errors
+    if 'DBCluster' in response:
+        print(f"New Aurora cluster '{new_cluster_identifier}' created successfully.")
+    else:
+        print("Error creating Aurora cluster.")
+else:
+    print("No suitable automated snapshot found.")
