@@ -1,0 +1,60 @@
+import boto3
+from datetime import datetime, timedelta
+
+# Initialize the RDS client
+rds_client = boto3.client('rds')
+
+# Replace 'database-1' with your RDS cluster identifier
+cluster_identifier = 'database-1'
+
+# List the snapshots for the specified RDS cluster
+response = rds_client.describe_db_cluster_snapshots(DBClusterIdentifier=cluster_identifier)
+
+# Get the current date and calculate the date one day ago
+current_date = datetime.now()
+one_day_ago = current_date - timedelta(days=1)
+
+# Extract and print the snapshot names created yesterday
+snapshot_names = []
+
+for snapshot in response['DBClusterSnapshots']:
+    snapshot_creation_date = snapshot['SnapshotCreateTime'].replace(tzinfo=None)
+    if snapshot_creation_date >= one_day_ago and snapshot_creation_date < current_date:
+        snapshot_names.append(snapshot['DBClusterSnapshotIdentifier'])
+        print(snapshot_names)
+print(f"Snapshots created yesterday for cluster {cluster_identifier}:")
+for name in snapshot_names:
+    print(name)
+if len(snapshot_names) > 0:
+    # Choose the snapshot you want to restore (e.g., the first one in the list)
+    snapshot_to_restore = snapshot_names[0]
+
+    # Replace 'my-restored-cluster' with the desired cluster name
+    restored_cluster_identifier = 'my-test-cluster'
+
+    # Specify the AWS region
+    aws_region = 'ap-south-1'
+
+    response = rds_client.restore_db_cluster_from_snapshot(
+        DBClusterIdentifier=restored_cluster_identifier,
+        SnapshotIdentifier=snapshot_to_restore,
+        Engine='aurora-mysql',
+        AvailabilityZones=['ap-south-1a'],  # Replace with your desired availability zone
+        DBSubnetGroupName='default',  # Replace with your subnet group name
+        VpcSecurityGroupIds=['sg-0be8844b940f1af85'],  # Replace with your security group IDs
+        EngineVersion='5.7.mysql_aurora.2.11.2',
+        #Tags=[
+        #    {
+        #        'Key': 'Name',
+        #        'Value': restored_cluster_identifier
+        #    }
+        #],
+    #    StorageEncrypted=True,
+     #   DeletionProtection=False
+#        ReadReplicaIdentifiers=['read-replica-1', 'read-replica-2'],
+        # DB instance identifier (for the write instance)
+    )
+
+    print(f"Restoring cluster {restored_cluster_identifier} from snapshot {snapshot_to_restore}.")
+else:
+    print("No snapshots found to restore.")
