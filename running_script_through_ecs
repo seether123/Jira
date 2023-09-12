@@ -1,0 +1,39 @@
+To run your Boto3 script within an ECS container without using custom images or repositories and have the container automatically terminated after the script execution, you can follow these simplified steps:
+
+Create an ECS Task Definition:
+
+Create an ECS task definition that references an existing public Docker image with Python installed. You don't need to create a custom Docker image or use ECR for this. Here's a minimal example of a task definition:
+
+json
+Copy code
+{
+  "family": "my-task-definition",
+  "containerDefinitions": [
+    {
+      "name": "my-container",
+      "image": "python:3.9",
+      "command": ["python", "-c", "import boto3; <your-script-here>"],
+      "cpu": 256,
+      "memory": 512
+    }
+  ]
+}
+Replace <your-script-here> with your actual Boto3 script code.
+
+Create an ECS Cluster:
+
+If you don't have an existing ECS cluster, create one using the AWS Management Console or AWS CLI.
+
+Create an ECS Task:
+
+Create an ECS task using the task definition you created in step 1. You can do this via the AWS Management Console or the AWS CLI.
+
+Run the ECS Task:
+
+Start the ECS task. It will launch a container based on the task definition, execute your Boto3 script, and then terminate. The task will automatically terminate upon script completion.
+
+Monitoring and Logs:
+
+You can monitor the task's progress and access its logs through the AWS Management Console or AWS CLI to verify that the script executed successfully.
+
+This approach uses a standard Python image without the need for a custom Docker image or ECR repository. The Boto3 script is executed within the container, and the container is automatically removed after the script completes its execution.
