@@ -1,0 +1,14 @@
+Create an IAM Role for Lambda:
+You'll need to create an IAM role that Lambda can assume to interact with RDS and EventBridge. This role should have permissions to describe RDS clusters and snapshots, restore a cluster from a snapshot, and publish events to EventBridge. Below is an example policy for this role:
+json
+{ "Version": "2012-10-17", "Statement": [ { "Effect": "Allow", "Action": [ "rds:DescribeDBClusterSnapshots", "rds:RestoreDBClusterFromSnapshot", "rds:CreateDBCluster", "events:PutEvents" ], "Resource": "*" } ] }
+Create an AWS Lambda Function:
+Create a Lambda function using the provided script. Here's how you can structure your Lambda function code:
+python
+import boto3 from datetime import datetime, timedelta def lambda_handler(event, context): # AWS region aws_region = 'us-west-2' # Aurora cluster information source_cluster_identifier = 'prod-aurora-postgresql-almjira-jira-upgrade-cluster' # Provide the name of the source Aurora cluster new_cluster_identifier = 'your-new-cluster-name' # Provide a name for the new Aurora cluster # Calculate the timestamp for 45 days ago snapshot_age_days = 45 snapshot_creation_time_threshold = datetime.now() - timedelta(days=snapshot_age_days) # Create an RDS client rds_client = boto3.client('rds', region_name=aws_region) # List available snapshots for the source Aurora cluster (including automated snapshots) response = rds_client.describe_db_cluster_snapshots( DBClusterIdentifier=source_cluster_identifier ) # Rest of the script ... # Your existing script code goes here ... # Rest of the script ...
+Don't forget to include the necessary IAM role in the Lambda function's configuration.
+Set Up EventBridge Rule:
+You can create an EventBridge rule that triggers the Lambda function at a specified schedule or based on a specific event. For example, you can create a rule that triggers the Lambda function every day at a specific time, or you can trigger it in response to a CloudWatch Events event.
+Configure EventBridge Rule Target:
+When creating the EventBridge rule, set the Lambda function you created as the target for the rule. This means that when the rule is triggered, it will invoke your Lambda function.
+With these steps, your Lambda function will be triggered based on the schedule or event you've configured in EventBridge. The Lambda function will then execute the provided script to check for suitable Aurora snapshots and restore a new cluster if a suitable snapshot is found. Make sure to replace the placeholder values in the script with actual values as needed for your environment.
