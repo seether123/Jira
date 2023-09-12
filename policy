@@ -1,0 +1,16 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "rds:DescribeDBClusterSnapshots",
+                "rds:RestoreDBClusterFromSnapshot",
+                "rds:CreateDBCluster",
+                "events:PutEvents"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+for allowing the access to event bridge and rds database 
