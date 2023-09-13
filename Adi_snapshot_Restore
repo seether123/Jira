@@ -8,7 +8,7 @@ rds_client = boto3.client('rds')
 cluster_identifier = 'database-1'
 
 # List the snapshots for the specified RDS cluster
-response = rds_client.describe_db_cluster_snapshots(DBClusterIdentifier=cluster_identifier)
+response = rds_client.describe_db_cluster_snapshots(DBClusterIdentifier=cluster_identifier,SnapshotType='automated' )
 
 # Get the current date and calculate the date one day ago
 current_date = datetime.now()
