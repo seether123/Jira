@@ -1,0 +1,55 @@
+{
+  "family": "my-github-script-task",
+  "containerDefinitions": [
+    {
+      "name": "my-github-script-container",
+      "image": "python:3.9",
+      "memory": 512,
+      "cpu": 256,
+      "essential": true,
+      "command": ["sh", "-c", "curl -o my-script.py https://raw.githubusercontent.com/yourusername/yourrepository/master/my-script.py && python my-script.py"],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/my-github-script-task",
+          "awslogs-region": "us-west-2"  // Replace with your desired AWS region
+        }
+      }
+    }
+  ],
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512"
+}
+------------------
+
+
+{
+  "family": "my-github-script-task",
+  "containerDefinitions": [
+    {
+      "name": "my-github-script-container",
+      "image": "python:3.9",
+      "memory": 512,
+      "cpu": 256,
+      "essential": true,
+      "command": [
+        "sh",
+        "-c",
+        "apt-get update && apt-get install -y python3-pip && pip3 install boto3 && curl -o my-script.py https://raw.githubusercontent.com/my-script.py && python my-script.py"
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/my-github-script-task",
+          "awslogs-region": "us-west-2"  // Replace with your desired AWS region
+        }
+      }
+    }
+  ],
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512"
+}
